@@ -1,0 +1,94 @@
+If the installation still downloads `sqlfluff` from the internet, even after vendorizing it, this is likely because the `install_requires` field in `setup.py` might still be prompting `pip` to fetch the package from PyPI. To prevent this, you need to ensure that `sqlfluff` is not listed as a dependency in `install_requires` and instead rely solely on the vendorized version.
+
+Here’s how to fully vendorize `sqlfluff` and ensure it doesn’t get downloaded from the internet during installation:
+
+### 1. **Remove `sqlfluff` from `install_requires`**
+
+If `sqlfluff` is listed in the `install_requires` section of your `setup.py`, remove it:
+
+**`setup.py`**
+
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name="sqlfluff_project",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    include_package_data=True,
+    package_data={
+        'your_module': ['vendor/sqlfluff/**/*', 'vendor/sqlfluff/**/**/*'],
+    },
+    install_requires=[],  # Leave this empty or only include non-vendorized packages
+    entry_points={
+        'console_scripts': [
+            'lint-sql=your_module.your_script:main',
+        ],
+    },
+)
+```
+
+### 2. **Modify Imports in Your Code**
+
+Ensure your code imports the vendorized version of `sqlfluff`. This can be done by modifying the `PYTHONPATH` at runtime in your script:
+
+**`your_script.py`**
+
+```python
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'vendor'))
+
+import sqlfluff  # Now this import should use the vendorized version
+import argparse
+
+def lint_sql_file(file_path):
+    lint_results = sqlfluff.lint(file_path)
+    return lint_results
+
+def main():
+    parser = argparse.ArgumentParser(description="Lint an SQL file using sqlfluff.")
+    parser.add_argument("file_path", type=str, help="Path to the SQL file to lint.")
+    args = parser.parse_args()
+
+    results = lint_sql_file(args.file_path)
+    if results:
+        for result in results:
+            print(result)
+    else:
+        print("No linting errors found.")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 3. **Rebuild the Wheel**
+
+Rebuild the wheel file to ensure it includes the vendorized `sqlfluff`:
+
+```bash
+python setup.py bdist_wheel
+```
+
+### 4. **Install the Wheel File Locally**
+
+To verify that the package doesn’t download `sqlfluff` during installation:
+
+1. **Uninstall any previous installation**:
+   ```bash
+   pip uninstall sqlfluff_project
+   ```
+
+2. **Install the new wheel file**:
+   ```bash
+   pip install dist/sqlfluff_project-0.1.0-py3-none-any.whl
+   ```
+
+### 5. **Verify No External Downloads**
+
+During installation, `pip` should not download `sqlfluff` from the internet since it is already included in your package. The script should use the vendorized version of `sqlfluff`.
+
+### Summary
+
+To prevent `sqlfluff` from being downloaded during installation, ensure that it is not listed in `install_requires` and that your script correctly imports the vendorized version. This way, your package is entirely self-contained, and all necessary components are included within the wheel file.
