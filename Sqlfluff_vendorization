@@ -1,0 +1,105 @@
+To add vendorization of the `sqlfluff` library to your project, you can follow these steps. This will allow you to package `sqlfluff` directly within your project, so it’s included in the wheel file and can be used without the need for an external installation.
+
+### 1. **Create a Vendor Directory**
+
+First, create a directory in your project to hold the vendorized libraries:
+
+```bash
+mkdir -p src/your_module/vendor
+```
+
+### 2. **Copy the `sqlfluff` Library**
+
+Next, copy the `sqlfluff` library from your Python environment into the `vendor` directory you just created:
+
+- **On Linux/macOS:**
+  ```bash
+  cp -r $(pip show sqlfluff | grep Location | cut -d' ' -f2)/sqlfluff src/your_module/vendor/
+  ```
+
+- **On Windows:**
+  - Locate the `sqlfluff` directory in your Python environment (typically under `Lib\site-packages\sqlfluff`).
+  - Copy this entire directory into `src/your_module/vendor/`.
+
+### 3. **Modify Your Python Script**
+
+Now, update your Python script to use the vendorized version of `sqlfluff`. You need to add the `vendor` directory to the Python path at runtime:
+
+**`your_script.py`**
+
+```python
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'vendor'))
+
+import sqlfluff
+import argparse
+
+def lint_sql_file(file_path):
+    lint_results = sqlfluff.lint(file_path)
+    return lint_results
+
+def main():
+    parser = argparse.ArgumentParser(description="Lint an SQL file using sqlfluff.")
+    parser.add_argument("file_path", type=str, help="Path to the SQL file to lint.")
+    args = parser.parse_args()
+
+    results = lint_sql_file(args.file_path)
+    if results:
+        for result in results:
+            print(result)
+    else:
+        print("No linting errors found.")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 4. **Update `setup.py`**
+
+Ensure that the `vendor` directory is included in the package distribution by modifying your `setup.py`:
+
+**`setup.py`**
+
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name="sqlfluff_project",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    include_package_data=True,
+    install_requires=[],
+    entry_points={
+        'console_scripts': [
+            'lint-sql=your_module.your_script:main',
+        ],
+    },
+)
+```
+
+### 5. **Build the Wheel File**
+
+Build the wheel file, which will now include the vendorized `sqlfluff`:
+
+```bash
+python setup.py bdist_wheel
+```
+
+### 6. **Test the Package**
+
+Install the wheel file to test that everything works correctly:
+
+```bash
+pip install dist/sqlfluff_project-0.1.0-py3-none-any.whl
+lint-sql path/to/sql_file.sql
+```
+
+### 7. **Share the Wheel File**
+
+You can now share the wheel file with others. They can extract it and use it directly without needing to install `sqlfluff` separately, as it's already included in your package.
+
+### Summary
+
+By vendorizing the `sqlfluff` library, you package it directly with your project, making it self-contained. This is particularly useful in environments where external dependencies are difficult to manage. Users can then use the package without needing to install `sqlfluff` separately.
