@@ -5,9 +5,8 @@ setup(
     version="0.1.0",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    install_requires=[
-        "sqlfluff"
-    ],
+    include_package_data=True,
+    install_requires=[],
     entry_points={
         'console_scripts': [
             'lint-sql=module.script:main',
