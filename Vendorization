@@ -1,0 +1,123 @@
+Vendorization is a process where you include the dependencies directly within your project's source code, ensuring that the dependencies are always available and don't need to be installed separately. Here's a simple example of how to set up a Python project with vendorized dependencies.
+
+### Project Structure
+
+Let's assume you have a project named `my_project`, and you want to vendorize a dependency like `requests`.
+
+```
+my_project/
+│
+├── my_project/
+│   ├── __init__.py
+│   ├── main.py
+│   └── vendor/
+│       ├── __init__.py
+│       └── requests/  # Vendorized dependency
+├── setup.py
+└── requirements.txt
+```
+
+### Step 1: Create the Project Structure
+
+Start by creating the directory structure shown above. You can do this manually or with the following commands:
+
+```bash
+mkdir -p my_project/my_project/vendor
+touch my_project/my_project/__init__.py
+touch my_project/my_project/main.py
+touch my_project/my_project/vendor/__init__.py
+```
+
+### Step 2: Install the Dependency
+
+You can install the dependency and copy it into the `vendor` directory:
+
+```bash
+pip install requests -t my_project/my_project/vendor/requests
+```
+
+This will download the `requests` package and place it in the `vendor/requests` directory.
+
+### Step 3: Modify `setup.py`
+
+Next, you'll want to modify your `setup.py` file to include the vendorized packages in your distribution. Here's an example `setup.py`:
+
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name='my_project',
+    version='0.1',
+    packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        'my_project.vendor': ['requests/**/*'],
+    },
+    zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'my_project=my_project.main:main',
+        ],
+    },
+)
+```
+
+### Step 4: Modify `main.py` to Use the Vendorized Dependency
+
+In your `main.py`, you'll need to modify the `sys.path` to include the vendorized directory so that the vendorized packages can be imported:
+
+```python
+import sys
+import os
+
+# Add the vendor directory to sys.path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'vendor'))
+
+# Now you can import the vendorized package
+import requests
+
+def main():
+    response = requests.get('https://www.example.com')
+    print(response.status_code)
+
+if __name__ == '__main__':
+    main()
+```
+
+### Step 5: Create `requirements.txt`
+
+Even though you've vendorized `requests`, it's still good practice to include a `requirements.txt` file for reference:
+
+```plaintext
+requests==2.26.0
+```
+
+### Step 6: Build and Test Your Project
+
+You can build the project using `setup.py`:
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+To test it, create a virtual environment, install your package, and run the script:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install dist/my_project-0.1-py3-none-any.whl
+my_project
+```
+
+This should print the status code of the response from `https://www.example.com`.
+
+### Step 7: (Optional) Automate Vendorization
+
+You can automate the vendorization process by adding a script or Makefile to handle dependency updates and copying them into the `vendor` directory.
+
+### Notes
+
+- **Advantages:** Vendorization ensures that your project is self-contained, and external dependencies won’t break your project if they are removed or updated.
+- **Disadvantages:** Your project might become larger, and updating dependencies can be more cumbersome.
+
+This sample setup demonstrates the basic approach to vendorizing a dependency in a Python project. You can extend this to multiple dependencies and larger projects as needed.
