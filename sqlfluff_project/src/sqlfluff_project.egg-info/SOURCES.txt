@@ -1,0 +1,10 @@
+pyproject.toml
+setup.py
+src/module/__init__.py
+src/module/script.py
+src/sqlfluff_project.egg-info/PKG-INFO
+src/sqlfluff_project.egg-info/SOURCES.txt
+src/sqlfluff_project.egg-info/dependency_links.txt
+src/sqlfluff_project.egg-info/entry_points.txt
+src/sqlfluff_project.egg-info/requires.txt
+src/sqlfluff_project.egg-info/top_level.txt

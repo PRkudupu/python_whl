@@ -1,0 +1,3 @@
+[console_scripts]
+lint-sql = module.script:main
+
