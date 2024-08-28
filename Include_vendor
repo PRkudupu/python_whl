@@ -1,0 +1,81 @@
+If the `vendor` folder is not being included in the wheel file, it's likely due to the way the `setup.py` file is configured. To ensure that the `vendor` folder is included in the wheel file, you need to explicitly tell `setuptools` to include it. Here’s how you can do it:
+
+### 1. **Modify `setup.py` to Include the `vendor` Directory**
+
+You need to modify the `setup.py` file to ensure that all the files in the `vendor` directory are included in the wheel. You can do this by specifying `package_data` or by using `MANIFEST.in`.
+
+#### Option 1: Use `package_data`
+
+You can include the `vendor` directory and its contents using the `package_data` argument in `setup.py`:
+
+**`setup.py`**
+
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name="sqlfluff_project",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    include_package_data=True,
+    package_data={
+        # Include everything in the vendor directory
+        'your_module': ['vendor/sqlfluff/**/*', 'vendor/sqlfluff/**/**/*'],
+    },
+    install_requires=[],
+    entry_points={
+        'console_scripts': [
+            'lint-sql=your_module.your_script:main',
+        ],
+    },
+)
+```
+
+#### Option 2: Use `MANIFEST.in`
+
+Alternatively, you can use a `MANIFEST.in` file to include the `vendor` directory:
+
+1. Create a `MANIFEST.in` file in the root of your project (at the same level as `setup.py`).
+
+2. Add the following lines to the `MANIFEST.in` file:
+
+**`MANIFEST.in`**
+
+```plaintext
+recursive-include src/your_module/vendor *
+```
+
+This tells `setuptools` to include all files under the `vendor` directory.
+
+### 2. **Rebuild the Wheel**
+
+After modifying `setup.py` or adding the `MANIFEST.in` file, rebuild the wheel file:
+
+```bash
+python setup.py bdist_wheel
+```
+
+### 3. **Check the Contents of the Wheel**
+
+To verify that the `vendor` directory is now included, you can inspect the contents of the wheel file:
+
+- Unzip the wheel file:
+  ```bash
+  unzip dist/sqlfluff_project-0.1.0-py3-none-any.whl -d extracted_wheel
+  ```
+
+- Check the `extracted_wheel` directory for the presence of the `vendor/sqlfluff` folder.
+
+### 4. **Test the Installation**
+
+Finally, install the wheel file and test it to ensure everything is working as expected:
+
+```bash
+pip install dist/sqlfluff_project-0.1.0-py3-none-any.whl
+lint-sql path/to/sql_file.sql
+```
+
+### Summary
+
+By updating `setup.py` to include the `vendor` directory or by using a `MANIFEST.in` file, you ensure that the `vendor` directory is packaged into the wheel file. This way, when the wheel is distributed and installed, all the necessary files, including `sqlfluff`, will be available for use.
