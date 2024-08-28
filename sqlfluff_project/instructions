@@ -1,0 +1,150 @@
+Here's a summarized guide with the necessary code snippets included:
+
+### 1. **Set Up Project Structure**
+
+Create the following directory structure:
+
+```bash
+mkdir sqlfluff_project
+cd sqlfluff_project
+
+mkdir -p src/your_module
+mkdir tests
+```
+
+### 2. **Install Dependencies**
+
+Install `sqlfluff` and `setuptools`:
+
+```bash
+pip install sqlfluff setuptools
+```
+
+### 3. **Write the SQL Script**
+
+In `src/your_module/`, create an example SQL file:
+
+**`example_sql_query.sql`**
+
+```sql
+SELECT
+    id, name, age
+FROM
+    users
+WHERE
+    age > 21
+ORDER BY
+    age;
+```
+
+### 4. **Create the Python Script**
+
+Write a Python script to lint SQL files, accepting the file path as a parameter:
+
+**`your_script.py`**
+
+```python
+import sqlfluff
+import argparse
+
+def lint_sql_file(file_path):
+    lint_results = sqlfluff.lint(file_path)
+    return lint_results
+
+def main():
+    parser = argparse.ArgumentParser(description="Lint an SQL file using sqlfluff.")
+    parser.add_argument("file_path", type=str, help="Path to the SQL file to lint.")
+    args = parser.parse_args()
+
+    results = lint_sql_file(args.file_path)
+    if results:
+        for result in results:
+            print(result)
+    else:
+        print("No linting errors found.")
+
+if __name__ == "__main__":
+    main()
+```
+
+### 5. **Create Tests**
+
+In the `tests/` directory, create a test file:
+
+**`test_your_script.py`**
+
+```python
+from src.your_module.your_script import lint_sql_file
+
+def test_lint_sql_file():
+    results = lint_sql_file("src/your_module/example_sql_query.sql")
+    assert len(results) == 0, "There should be no linting errors."
+```
+
+### 6. **Set Up Packaging**
+
+Create a `setup.py` file in the root directory:
+
+**`setup.py`**
+
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name="sqlfluff_project",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    install_requires=[
+        "sqlfluff"
+    ],
+    entry_points={
+        'console_scripts': [
+            'lint-sql=your_module.your_script:main',
+        ],
+    },
+)
+```
+
+Create a `pyproject.toml` file for build requirements:
+
+**`pyproject.toml`**
+
+```toml
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+```
+
+### 7. **Build the Wheel File**
+
+Generate the wheel file:
+
+```bash
+python setup.py bdist_wheel
+```
+
+### 8. **Install and Run the Script**
+
+After building, install the wheel file:
+
+```bash
+pip install dist/sqlfluff_project-0.1.0-py3-none-any.whl
+```
+
+Run the script, passing the SQL file as a parameter:
+
+```bash
+lint-sql src/your_module/example_sql_query.sql
+```
+
+### 9. **Distribute or Upload**
+
+(Optional) If you want to distribute the package, upload it to PyPI using `twine`:
+
+```bash
+pip install twine
+twine upload dist/*
+```
+
+This completes the steps needed to create a project using `sqlfluff`, package it into a wheel file, and pass an SQL file as a parameter for linting.
